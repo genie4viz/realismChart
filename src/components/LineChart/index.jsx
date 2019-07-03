@@ -1,139 +1,71 @@
-import React, { useEffect, useRef } from "react";
-import { Input, message } from "antd";
-import io from "socket.io-client";
+import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import "./index.css";
 
-const LineChart = () => {
-  const w = 1000,
-    h = 300,
-    margin = 50;
-  const thredholdRef = useRef();
-  const svgRef = useRef();
+const SHOW_LENGTH = 30;
+const initLineData = () => {
+  let initialArrs = [];
+  const now = new Date();
+
+  for (let i = 0; i < SHOW_LENGTH; i++) {
+    initialArrs.push({
+      time: now - (SHOW_LENGTH - i + 1) * 1000,
+      value: 0
+    });
+  }
+  return initialArrs;
+};
+
+const LineChart = ({ recvValue, recvTimeStamp }) => {
+  
+  const w = 1000, h = 300, margin = 30;
+  const keepDataRef = useRef(initLineData()),        
+        linePathRef = useRef(),
+        xAxisRef = useRef(),
+        yAxisRef = useRef();
+  
+  keepDataRef.current.push({time: recvTimeStamp, value: recvValue});
+  keepDataRef.current.shift();
+  
+  const x = d3
+    .scaleTime()
+    .domain([keepDataRef.current[0].time, keepDataRef.current[SHOW_LENGTH - 1].time])
+    .range([0, w - margin * 2]);
+
+  const y = d3
+    .scaleLinear()
+    .domain([-100, 100])
+    .range([h - margin, margin]);
+  
+  const line = d3
+    .line()
+    .x(d => x(d.time))
+    .y(d => y(d.value));
 
   useEffect(() => {
-    const limit = 30,
-      now = new Date();
+    d3.select(xAxisRef.current).call(d3.axisBottom().scale(x));
 
-    let current = [];
-    for (let i = 0; i < limit; i++) {
-      current.push({
-        time: now - (limit - i + 1) * 1000,
-        value: 0
-      });
-    }
-
-    let timeMin = d3.min(current, d => d.time),
-      timeMax = d3.max(current, d => d.time);
-
-    const x = d3
-      .scaleTime()
-      .domain([timeMin, timeMax])
-      .range([0, w - margin]);
-
-    const y = d3
-      .scaleLinear()
-      .domain([-100, 100])
-      .range([h - margin, 0]);
-
-    const line = d3
-      .line()
-      .x(d => x(d.time))
-      .y(d => y(d.value));
-
-    const graph = d3
-      .select(svgRef.current)
-      .append("g")
-      .attr("transform", `translate(${margin / 2}, ${margin / 2})`)
-      .attr("width", w - margin)
-      .attr("height", h - margin);
-
-    const x_axis = graph
-      .append("g")
-      .attr("class", "x axis")
-      .attr("transform", `translate(${margin}, ${y(0)})`)
-      .call((x.axis = d3.axisBottom().scale(x)));
-
-    const y_axis = graph
-      .append("g")
-      .attr("class", "y axis")
-      .attr("transform", `translate(${margin / 2}, 0)`)
-      .call(
-        d3
-          .axisLeft()
-          .scale(y)
-          .ticks(10)
-          .tickSize(-w)
-      );
-
-    y_axis
+    d3.select(yAxisRef.current)
+      .call(d3.axisLeft().scale(y).ticks(10).tickSize(-w + margin * 2))
       .selectAll(".tick")
       .style("stroke-dasharray", "5,3")
       .style("opacity", 0.6);
-
-    const current_path = graph
-      .append("g")
-      .attr("transform", `translate(${margin})`)
-      .append("path")
-      .datum(current)
-      .style("fill", "transparent")
-      .style("stroke", "steelblue");
-
-    tick(new Date(), 0);
-
-    function tick(ts, v) {
-      current.push({
-        value: v,
-        time: new Date(ts)
-      });
-      // Shift domain
-      x.domain([new Date(current[1].time), new Date(ts)]);
-      // Slide x-axis left
-      x_axis
-        .transition()
-        .duration(300)
-        .ease(d3.easeLinear, 2)
-        .call(x.axis);
-      // Slide path left
-      current_path.attr("transform", `translate(${x(current[1].time)})`);
-
-      current_path.attr("d", line);
-      // Remove oldest data point from each group
-      current.shift();
-    }
-
-    try {
-      const ioClient = io.connect("http://localhost:5050");
-      ioClient.on("data", msg => {
-        if (msg.value > thredholdRef.current)
-          message.success(
-            `LineChart : The received number from server ${msg.value} is greater than thredhold ${thredholdRef.current}`
-          );
-        tick(msg.timestamp, msg.value);
-      });
-    } catch (err) {
-      console.log(err);
-    }
-    return () => io.close();
-  }, []);
-  const onChange = number => {
-    thredholdRef.current = number;
-  };
+  });
+  
   return (
     <div>
-      <div>
-        <Input
-          className="Input_Linechart"
-          addonBefore="Alert threshold"
-          addonAfter=""
-          placeholder="Input number..."
-          defaultValue=""
-          onChange={e => onChange(e.target.value)}
-        />
-      </div>
-      <div>
-        <svg ref={svgRef} width={w} height={h} />
-      </div>
+      <svg width={w} height={h}>
+        <g transform={`translate(${margin}, 0)`}>                
+            <g ref={xAxisRef} transform={`translate(0, ${y(0)})`}/>
+            <g ref={yAxisRef} />
+            <text x={0} y={20} fontSize="12px" color="red" textAnchor="middle">Value</text>            
+            <path
+              ref={linePathRef} 
+              d={line(keepDataRef.current)}
+              stroke="steelblue"
+              fill="transparent"
+              transform={`translate(${x(keepDataRef.current[0].time)})`}/>
+        </g>      
+      </svg>      
     </div>
   );
 };

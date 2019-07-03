@@ -1,0 +1,29 @@
+
+Header {
+    text-align: left;
+}
+.titlePlaceholder {
+    color: white;
+    font-size: 18pt;
+}
+.loadingIndicator {
+    color: black;
+    font-size: 18pt;
+}
+.thresholdWrapper {    
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+.thredholdPlaceholder {
+    width: 20%;
+}
+.loadingHolder {
+    width: 100%;
+    text-align: center;
+}
+.chartContainer {
+    width: 100%;
+    text-align: center;
+}

@@ -1,125 +1,61 @@
-import React, { useEffect, useRef } from "react";
-import { Input, message } from "antd";
-import io from "socket.io-client";
+import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import "./index.css";
 
-const BarChart = () => {
-  const w = 1000,
-    h = 300,
-    margin = 50;
-  const thredholdRef = useRef();
-  const svgRef = useRef();
+const initBarData = () => {
+  let initialArrs = [];
+  for (let i = -100; i <= 90; i += 10) {
+    initialArrs.push({
+      value: 0,
+      range: `${i}~${i + 10}`
+    });    
+  }
+  return initialArrs;
+};
+
+const BarChart = ({ recvValue }) => {
+  
+  const w = 1000, h = 300, margin = 30;
+  const keepDataRef = useRef(initBarData()),
+        xAxisRef = useRef(),
+        yAxisRef = useRef();
+
+  keepDataRef.current.filter(e => Number(e.range.split("~")[0]) <= recvValue && recvValue < Number(e.range.split("~")[1]))[0].value++;
+  
+  const x = d3
+    .scaleBand()
+    .rangeRound([0, w - margin * 2])
+    .domain(keepDataRef.current.map(d => d.range))
+    .padding(0.1);
+
+  const yMax = recvValue ? d3.max(keepDataRef.current, d => d.value) : 1;
+  const y = d3
+    .scaleLinear()
+    .rangeRound([h - margin, margin])
+    .domain([0, yMax]);
 
   useEffect(() => {
-    let x = d3
-        .scaleBand()
-        .rangeRound([margin, w - margin])
-        .padding(0.1),
-      y = d3.scaleLinear().rangeRound([h - margin, margin]);
-
-    let data = [];
-    for (let i = -100; i <= 90; i += 10) {
-      data.push({
-        value: 0,
-        range: `${i}~${i + 10}`
-      });
-    }
-
-    // set the domains of the axes
-    x.domain(data.map(d => d.range));
-    y.domain([0, 1]); //d3.max(data, ((d) => d.value))
-
-    // add the svg elements
-    d3.select(svgRef.current)
-      .append("g")
-      .attr("class", "axis axis--x")
-      .attr("transform", `translate(0,${h - margin})`)
-      .call(d3.axisBottom().scale(x));
-
-    const y_axis = d3
-      .select(svgRef.current)
-      .append("g")
-      .attr("class", "axis axis--y")
-      .attr("transform", `translate(${margin},0)`)
-      .call(
-        (y.axis = d3
-          .axisLeft()
-          .scale(y)
-          .ticks(10))
-      );
-
-    // create the bars
-    var g = d3.select(svgRef.current).append("g");
-    g.selectAll(".bar")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("class", "bar")
-      .attr("fill", "steelblue")
-      .attr("x", d => x(d.range))
-      .attr("y", d => y(d.value))
-      .attr("width", x.bandwidth())
-      .attr("height", d => h - margin - y(d.value));
-
-    function tick(v) {
-      for (let i = -100; i <= 90; i += 10) {
-        if (i <= v && i + 10 > v) {
-          data.filter(e => e.range === `${i}~${i + 10}`)[0].value++;
-        }
-      }
-      let maxCounts = d3.max(data, d => d.value);
-      y.domain([0, maxCounts < 1 ? 1 : maxCounts]);
-      y_axis
-        .transition()
-        .duration(1000)
-        .ease(d3.easeLinear, 2)
-        .call(y.axis);
-
-      d3.selectAll(".bar")
-        .data(data)
-        .transition()
-        .duration(300)
-        .attr("x", d => x(d.range))
-        .attr("y", d => y(d.value))
-        .attr("height", d => h - margin - y(d.value));
-    }
-
-    try {
-      const ioClient = io.connect("http://localhost:5050");
-      ioClient.on("data", msg => {
-        if (msg.value > thredholdRef.current)
-          message.warning(
-            `BarChart : The received number from server ${msg.value} is greater than thredhold ${thredholdRef.current}`
-          );
-
-        tick(msg.value);
-      });
-    } catch (err) {
-      console.log(err);
-    }
-    return () => io.close();
-  }, []);
-
-  const onChange = number => {
-    thredholdRef.current = number;
-  };
+    d3.select(xAxisRef.current).call(d3.axisBottom().scale(x));
+    d3.select(yAxisRef.current).call(d3.axisLeft().scale(y).ticks(yMax));
+  });
 
   return (
     <div>
-      <div>
-        <Input
-          className="Input_Barchart"
-          addonBefore="Alert threshold"
-          addonAfter=""
-          placeholder="Input number..."
-          defaultValue=""
-          onChange={e => onChange(e.target.value)}
-        />
-      </div>
-      <div>
-        <svg ref={svgRef} width={w} height={h} />
-      </div>
+      <svg width={w} height={h}>        
+        <g transform={`translate(${margin}, 0)`}>        
+          <g ref={xAxisRef} transform={`translate(0,${h - margin})`} />
+          <g ref={yAxisRef} />
+          <text x={0} y={20} fontSize="12px" color="red" textAnchor="middle">Counts</text>
+          {keepDataRef.current.map((e, i) => 
+            <rect 
+              key={i}
+              fill="steelblue" 
+              x={x(e.range)} 
+              y={y(e.value)}
+              width={x.bandwidth()}
+              height={h - margin - y(e.value)} />
+          )}          
+        </g>        
+      </svg>
     </div>
   );
 };

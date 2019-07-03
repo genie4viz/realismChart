@@ -56,10 +56,10 @@ const App = () => {
         {recvData.value != null 
           ? <div className="chartContainer">
               <div>
-                <LineChart recvValue={recvData.value} recvTimeStamp={recvData.timestamp} />
+                <LineChart recvValue={recvData.value} recvTimeStamp={recvData.timestamp} width={1000} height={300}/>
               </div>
               <div>
-                <BarChart recvValue={recvData.value} />
+                <BarChart recvValue={recvData.value} width={1000} height={300} />
               </div>
             </div>
           : <div className="loadingHolder">

@@ -12,9 +12,9 @@ const initBarData = () => {
   return initialArrs;
 };
 
-const BarChart = ({ recvValue }) => {
+const BarChart = ({ recvValue, width, height }) => {
   
-  const w = 1000, h = 300, margin = 30;
+  const margin = 30;
   const keepDataRef = useRef(initBarData()),
         xAxisRef = useRef(),
         yAxisRef = useRef();
@@ -23,36 +23,36 @@ const BarChart = ({ recvValue }) => {
   
   const x = d3
     .scaleBand()
-    .rangeRound([0, w - margin * 2])
+    .rangeRound([0, width - margin * 2])
     .domain(keepDataRef.current.map(d => d.range))
     .padding(0.1);
 
   const yMax = recvValue ? d3.max(keepDataRef.current, d => d.value) : 1;
   const y = d3
     .scaleLinear()
-    .rangeRound([h - margin, margin])
+    .rangeRound([height - margin, margin])
     .domain([0, yMax]);
-
+  
   useEffect(() => {
     d3.select(xAxisRef.current).call(d3.axisBottom().scale(x));
-    d3.select(yAxisRef.current).call(d3.axisLeft().scale(y).ticks(yMax));
+    d3.select(yAxisRef.current).call(d3.axisLeft().scale(y).ticks(yMax));    
   });
 
   return (
     <div>
-      <svg width={w} height={h}>        
+      <svg width={width} height={height}>
         <g transform={`translate(${margin}, 0)`}>        
-          <g ref={xAxisRef} transform={`translate(0,${h - margin})`} />
+          <g ref={xAxisRef} transform={`translate(0,${height - margin})`} />
           <g ref={yAxisRef} />
-          <text x={0} y={20} fontSize="12px" color="red" textAnchor="middle">Counts</text>
+          <text x={0} y={20} fontSize="12px" color="red" textAnchor="middle">Counts</text>          
           {keepDataRef.current.map((e, i) => 
             <rect 
-              key={i}
+              key={i}                
               fill="steelblue" 
               x={x(e.range)} 
               y={y(e.value)}
               width={x.bandwidth()}
-              height={h - margin - y(e.value)} />
+              height={height - margin - y(e.value)} />
           )}          
         </g>        
       </svg>

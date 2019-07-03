@@ -15,9 +15,9 @@ const initLineData = () => {
   return initialArrs;
 };
 
-const LineChart = ({ recvValue, recvTimeStamp }) => {
+const LineChart = ({ recvValue, recvTimeStamp, width, height }) => {
   
-  const w = 1000, h = 300, margin = 30;
+  const margin = 30;
   const keepDataRef = useRef(initLineData()),        
         linePathRef = useRef(),
         xAxisRef = useRef(),
@@ -29,12 +29,12 @@ const LineChart = ({ recvValue, recvTimeStamp }) => {
   const x = d3
     .scaleTime()
     .domain([keepDataRef.current[0].time, keepDataRef.current[SHOW_LENGTH - 1].time])
-    .range([0, w - margin * 2]);
+    .range([0, width - margin * 2]);
 
   const y = d3
     .scaleLinear()
     .domain([-100, 100])
-    .range([h - margin, margin]);
+    .range([height - margin, margin]);
   
   const line = d3
     .line()
@@ -43,9 +43,8 @@ const LineChart = ({ recvValue, recvTimeStamp }) => {
 
   useEffect(() => {
     d3.select(xAxisRef.current).call(d3.axisBottom().scale(x));
-
     d3.select(yAxisRef.current)
-      .call(d3.axisLeft().scale(y).ticks(10).tickSize(-w + margin * 2))
+      .call(d3.axisLeft().scale(y).ticks(10).tickSize(-width + margin * 2))
       .selectAll(".tick")
       .style("stroke-dasharray", "5,3")
       .style("opacity", 0.6);
@@ -53,7 +52,7 @@ const LineChart = ({ recvValue, recvTimeStamp }) => {
   
   return (
     <div>
-      <svg width={w} height={h}>
+      <svg width={width} height={height}>
         <g transform={`translate(${margin}, 0)`}>                
             <g ref={xAxisRef} transform={`translate(0, ${y(0)})`}/>
             <g ref={yAxisRef} />

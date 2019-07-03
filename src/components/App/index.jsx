@@ -47,7 +47,6 @@ const App = () => {
           <Input
             className="thredholdPlaceholder"            
             addonBefore="Alert threshold"
-            addonAfter=""
             placeholder="Input number..."
             defaultValue={0}
             onChange={e => onChangeThreshold(e.target.value)}

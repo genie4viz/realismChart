@@ -35,7 +35,15 @@ const BarChart = ({ recvValue, width, height }) => {
   
   useEffect(() => {
     d3.select(xAxisRef.current).call(d3.axisBottom().scale(x));
-    d3.select(yAxisRef.current).call(d3.axisLeft().scale(y).ticks(yMax));    
+    d3.select(yAxisRef.current).call(d3.axisLeft().scale(y).ticks(yMax));
+        
+    d3.selectAll(".bar").each(function(_, i){      
+      d3.select(this)
+        .transition()
+        .duration(300)
+        .attr("y", y(keepDataRef.current[i].value))
+        .attr("height", height - margin - y(keepDataRef.current[i].value));      
+    })
   });
 
   return (
@@ -46,13 +54,13 @@ const BarChart = ({ recvValue, width, height }) => {
           <g ref={yAxisRef} />
           <text x={0} y={20} fontSize="12px" color="red" textAnchor="middle">Counts</text>          
           {keepDataRef.current.map((e, i) => 
-            <rect 
-              key={i}                
+            <rect
+              className="bar"
+              key={i}
               fill="steelblue" 
-              x={x(e.range)} 
-              y={y(e.value)}
-              width={x.bandwidth()}
-              height={height - margin - y(e.value)} />
+              x={x(e.range)}
+              y={height - margin}
+              width={x.bandwidth()} />
           )}          
         </g>        
       </svg>

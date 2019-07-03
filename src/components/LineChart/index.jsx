@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 
 const SHOW_LENGTH = 30;
+
 const initLineData = () => {
   let initialArrs = [];
   const now = new Date();
@@ -48,6 +49,11 @@ const LineChart = ({ recvValue, recvTimeStamp, width, height }) => {
       .selectAll(".tick")
       .style("stroke-dasharray", "5,3")
       .style("opacity", 0.6);
+    // d3.select(linePathRef)
+    //   .select('path')
+    //   .transition()
+    //   .duration(300)
+    //   .attr(d, line(keepDataRef.current))
   });
   
   return (

@@ -23,6 +23,7 @@ const App = () => {
             description:
             `Received value (${msg.value}) is greater than threshold (${thredholdRef.current}).`,
             icon: <Icon type="smile" style={{ fontSize: 18, color: '#108ee9' }} />,
+            placement: 'topLeft'
           });
         }
         setRecvData(msg);

@@ -19,8 +19,7 @@ const initLineData = () => {
 const LineChart = ({ recvValue, recvTimeStamp, width, height }) => {
   
   const margin = 30;
-  const keepDataRef = useRef(initLineData()),        
-        linePathRef = useRef(),
+  const keepDataRef = useRef(initLineData()),
         xAxisRef = useRef(),
         yAxisRef = useRef();
   
@@ -48,13 +47,7 @@ const LineChart = ({ recvValue, recvTimeStamp, width, height }) => {
       .call(d3.axisLeft().scale(y).ticks(10).tickSize(-width + margin * 2))
       .selectAll(".tick")
       .style("stroke-dasharray", "5,3")
-      .style("opacity", 0.6);    
-    
-    d3.select(linePathRef.current)
-      .transition()
-      .duration(300)
-      .ease(d3.easeLinear, 2)
-      .attr("d", line(keepDataRef.current));
+      .style("opacity", 0.6);
   });
   
   return (
@@ -64,7 +57,7 @@ const LineChart = ({ recvValue, recvTimeStamp, width, height }) => {
             <g ref={xAxisRef} transform={`translate(0, ${y(0)})`}/>
             <g ref={yAxisRef} />
             <text x={0} y={20} fontSize="12px" color="red" textAnchor="middle">Value</text>            
-            <path ref={linePathRef} stroke="steelblue" fill="transparent" />
+            <path d={line(keepDataRef.current)} stroke="steelblue" fill="transparent" />
         </g>      
       </svg>      
     </div>
